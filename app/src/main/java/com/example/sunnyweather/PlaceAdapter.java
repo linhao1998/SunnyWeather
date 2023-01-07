@@ -1,5 +1,8 @@
 package com.example.sunnyweather;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +39,19 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.ViewHolder> 
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.place_item,parent,false);
         ViewHolder holder = new ViewHolder(view);
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int position = holder.getAbsoluteAdapterPosition();
+                Place place = placeList.get(position);
+                Intent intent = new Intent(parent.getContext(),WeatherActivity.class);
+                intent.putExtra("location_lng",place.location.lng);
+                intent.putExtra("location_lat",place.location.lat);
+                intent.putExtra("place_name",place.name);
+                parent.getContext().startActivity(intent);
+                ((Activity)parent.getContext()).finish();
+            }
+        });
         return holder;
     }
 
