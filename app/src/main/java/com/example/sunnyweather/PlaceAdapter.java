@@ -2,6 +2,8 @@ package com.example.sunnyweather;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,7 +19,14 @@ import java.util.List;
 
 public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.ViewHolder> {
 
+    private PlaceFragment placeFragment;
+
     private List<Place> placeList;
+
+    public PlaceAdapter(PlaceFragment placeFragment, List<Place> placeList) {
+        this.placeFragment = placeFragment;
+        this.placeList = placeList;
+    }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView placeName;
@@ -30,10 +39,6 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.ViewHolder> 
         }
     }
 
-    public PlaceAdapter(List<Place> placeList) {
-        this.placeList = placeList;
-    }
-
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -44,12 +49,25 @@ public class PlaceAdapter extends RecyclerView.Adapter<PlaceAdapter.ViewHolder> 
             public void onClick(View v) {
                 int position = holder.getAbsoluteAdapterPosition();
                 Place place = placeList.get(position);
-                Intent intent = new Intent(parent.getContext(),WeatherActivity.class);
-                intent.putExtra("location_lng",place.location.lng);
-                intent.putExtra("location_lat",place.location.lat);
-                intent.putExtra("place_name",place.name);
-                parent.getContext().startActivity(intent);
-                ((Activity)parent.getContext()).finish();
+                Activity activity = placeFragment.getActivity();
+                if (activity instanceof MainActivity) {
+                    Intent intent = new Intent(parent.getContext(),WeatherActivity.class);
+                    intent.putExtra("location_lng",place.location.lng);
+                    intent.putExtra("location_lat",place.location.lat);
+                    intent.putExtra("place_name",place.name);
+                    activity.startActivity(intent);
+                    activity.finish();
+                } else if (activity instanceof WeatherActivity){
+                    WeatherActivity weatherActivity = (WeatherActivity) activity;
+                    weatherActivity.drawerLayout.closeDrawers();
+                    weatherActivity.swipeRefresh.setRefreshing(true);
+                    weatherActivity.editor.putString("location_lng",place.location.lng);
+                    weatherActivity.editor.putString("location_lat",place.location.lat);
+                    weatherActivity.editor.putString("place_name",place.name);
+                    weatherActivity.editor.apply();
+                    weatherActivity.requestWeather(weatherActivity.pref.getString("location_lng",null),
+                                                    weatherActivity.pref.getString("location_lat",null));
+                }
             }
         });
         return holder;

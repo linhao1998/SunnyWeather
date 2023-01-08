@@ -2,8 +2,12 @@ package com.example.sunnyweather;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewpager.widget.ViewPager;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -12,6 +16,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -43,10 +49,6 @@ public class WeatherActivity extends AppCompatActivity {
 
     private RelativeLayout nowLayout;
 
-    private FrameLayout titleLayout;
-
-    private LinearLayout bodyLayout;
-
     private TextView placeName;
 
     private TextView currentTemp;
@@ -65,7 +67,15 @@ public class WeatherActivity extends AppCompatActivity {
 
     private TextView carWashingText;
 
-    SharedPreferences pref;
+    public SharedPreferences pref;
+
+    public SharedPreferences.Editor editor;
+
+    public SwipeRefreshLayout swipeRefresh;
+
+    public DrawerLayout drawerLayout;
+
+    private Button navButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,8 +87,6 @@ public class WeatherActivity extends AppCompatActivity {
 
         weatherLayout = (ScrollView) findViewById(R.id.weatherLayout);
         nowLayout = (RelativeLayout) findViewById(R.id.nowLayout);
-        titleLayout = (FrameLayout) findViewById(R.id.titleLayout);
-        bodyLayout = (LinearLayout) findViewById(R.id.bodyLayout);
         placeName = (TextView) findViewById(R.id.placeName);
         currentTemp = (TextView) findViewById(R.id.currentTemp);
         currentSky = (TextView) findViewById(R.id.currentSky);
@@ -89,18 +97,12 @@ public class WeatherActivity extends AppCompatActivity {
         ultravioletText = (TextView) findViewById(R.id.ultravioletText);
         carWashingText = (TextView) findViewById(R.id.carWashingText);
 
+        swipeRefresh = (SwipeRefreshLayout) findViewById(R.id.swipeRefresh);
+        swipeRefresh.setColorSchemeResources(R.color.purple_500);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
+        navButton = (Button) findViewById(R.id.navBtn);
         pref = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = pref.edit();
-//        if (pref.getString("location_lng",null) == null){
-//            editor.putString("location_lng",getIntent().getStringExtra("location_lng"));
-//        }
-//        if (pref.getString("location_lat",null) == null){
-//            editor.putString("location_lat",getIntent().getStringExtra("location_lat"));
-//        }
-//        if (pref.getString("place_name",null) == null){
-//            editor.putString("place_name",getIntent().getStringExtra("place_name"));
-//        }
-//        editor.apply();
+        editor = pref.edit();
         String realtimeResponseString = pref.getString("realtimeResponse",null);
         String dailyResponseString = pref.getString("dailyResponse",null);
         if (realtimeResponseString != null && dailyResponseString != null){
@@ -112,16 +114,46 @@ public class WeatherActivity extends AppCompatActivity {
             String locationLngStr = getIntent().getStringExtra("location_lng");
             String locationLatStr = getIntent().getStringExtra("location_lat");
             editor.putString("place_name",getIntent().getStringExtra("place_name"));
+            editor.putString("location_lng",locationLngStr);
+            editor.putString("location_lat",locationLatStr);
             editor.apply();
             weatherLayout.setVisibility(View.INVISIBLE);
             requestWeather(locationLngStr,locationLatStr);
         }
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                requestWeather(pref.getString("location_lng",null),pref.getString("location_lat",null));
+            }
+        });
+        navButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
+        drawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
+            @Override
+            public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {}
+
+            @Override
+            public void onDrawerOpened(@NonNull View drawerView) {}
+
+            @Override
+            public void onDrawerClosed(@NonNull View drawerView) {
+                InputMethodManager manager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                manager.hideSoftInputFromWindow(drawerView.getWindowToken(),InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+
+            @Override
+            public void onDrawerStateChanged(int newState) {}
+        });
     }
 
     /**
      * 根据城市经纬度请求天气信息
      */
-    private void requestWeather(String Lng, String Lat) {
+    public void requestWeather(String Lng, String Lat) {
         String realtimeUrl = "https://api.caiyunapp.com/v2.5/qNTT9ci6BtlUuOiz/" + Lng + "," + Lat + "/realtime.json";
         String dailyUrl = "https://api.caiyunapp.com/v2.5/qNTT9ci6BtlUuOiz/" + Lng + "," + Lat + "/daily.json";
         HttpUtil.sendOkHttpRequest(realtimeUrl, new Callback() {
@@ -131,6 +163,7 @@ public class WeatherActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(WeatherActivity.this,"获取实时天气信息失败",Toast.LENGTH_SHORT).show();
+                        swipeRefresh.setRefreshing(false);
                     }
                 });
             }
@@ -161,6 +194,7 @@ public class WeatherActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(WeatherActivity.this,"获取未来天气信息失败",Toast.LENGTH_SHORT).show();
+                        swipeRefresh.setRefreshing(false);
                     }
                 });
             }
@@ -180,6 +214,7 @@ public class WeatherActivity extends AppCompatActivity {
                         } else {
                             Toast.makeText(WeatherActivity.this,"获取未来天气信息失败",Toast.LENGTH_SHORT).show();
                         }
+                        swipeRefresh.setRefreshing(false);
                     }
                 });
             }
