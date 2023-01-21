@@ -224,9 +224,9 @@ public class WeatherActivity extends AppCompatActivity {
     private void showRealtimeInfo(RealtimeResponse realtimeResponse) {
         String placeNameText = pref.getString("place_name",null);
         RealtimeResponse.Realtime realtime = realtimeResponse.result.realtime;
-        String currentTempText = Math.round(realtime.temperature) + " ℃";
+        String currentTempText = (int)realtime.temperature + " ℃";
         String currentSkyText = Utility.getSky(realtime.skycon).getInfo();
-        String currentAQIText = "空气指数 " + Math.round(realtime.airQuality.aqi.chn);
+        String currentAQIText = "空气指数 " + (int)realtime.airQuality.aqi.chn;
         placeName.setText(placeNameText);
         currentTemp.setText(currentTempText);
         currentSky.setText(currentSkyText);
@@ -252,7 +252,7 @@ public class WeatherActivity extends AppCompatActivity {
             dateInfo.setText(simpleDateFormat.format(skycon.date));
             skyIcon.setImageResource(Utility.getSky(skycon.value).getIcon());
             skyInfo.setText(Utility.getSky(skycon.value).getInfo());
-            String tempText = Math.round(temperature.min) + " ~ " + Math.round(temperature.max) + " ℃";
+            String tempText = (int)temperature.min + " ~ " + (int)temperature.max + " ℃";
             temperatureInfo.setText(tempText);
             forecastLayout.addView(view);
         }

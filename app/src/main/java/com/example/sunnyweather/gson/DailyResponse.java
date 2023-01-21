@@ -26,9 +26,9 @@ public class DailyResponse {
     }
 
     public class Temperature {
-        public Float max;
+        public float max;
 
-        public Float min;
+        public float min;
     }
 
     public class Skycon {
