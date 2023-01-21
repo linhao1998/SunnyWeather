@@ -8,6 +8,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewpager.widget.ViewPager;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import android.widget.Toast;
 
 import com.example.sunnyweather.gson.DailyResponse;
 import com.example.sunnyweather.gson.RealtimeResponse;
+import com.example.sunnyweather.service.AutoUpdateService;
 import com.example.sunnyweather.util.HttpUtil;
 import com.example.sunnyweather.util.Utility;
 
@@ -233,6 +235,8 @@ public class WeatherActivity extends AppCompatActivity {
         currentAQI.setText(currentAQIText);
         nowLayout.setBackgroundResource(Utility.getSky(realtime.skycon).getBg());
         weatherLayout.setVisibility(View.VISIBLE);
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
     }
 
     private void showDailyInfo(DailyResponse dailyResponse){
