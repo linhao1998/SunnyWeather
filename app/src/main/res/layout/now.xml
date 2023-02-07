@@ -10,7 +10,7 @@
         android:layout_height="70dp"
         android:fitsSystemWindows="true">
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/navBtn"
             android:layout_width="30dp"
             android:layout_height="30dp"
